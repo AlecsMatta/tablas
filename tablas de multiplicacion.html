@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Tablas de Multiplicar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #f0f9ff; }
+    .correct { background-color: #d1fae5; }
+    .incorrect { background-color: #fee2e2; }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+  <!-- Instrucciones -->
+  <!--
+    Instrucciones:
+    1. Responde a las multiplicaciones en el campo de texto.
+    2. Recibirás retroalimentación inmediata.
+    3. Tienes 1 minuto por nivel para obtener la mayor cantidad de aciertos.
+    4. Los niveles aumentan la dificultad con números más grandes.
+    5. Reinicia el juego con el botón de reinicio.
+  -->
+
+  <div class="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md text-center">
+    <h1 class="text-3xl font-bold text-blue-600 mb-4">¡Practica las Tablas de Multiplicar!</h1>
+    <div id="level" class="text-lg font-semibold text-green-500 mb-2">Nivel: 1</div>
+    <div id="timer" class="text-xl font-bold text-red-500 mb-4">Tiempo restante: 60s</div>
+    <div id="question" class="text-2xl mb-4"></div>
+    <input id="answer" type="number" class="w-full p-2 rounded-lg border mb-4" placeholder="Escribe tu respuesta aquí">
+    <button id="submit" class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Comprobar</button>
+    <div id="feedback" class="mt-4 text-lg font-semibold"></div>
+    <div class="mt-4">
+      <p>Aciertos: <span id="correct-count">0</span></p>
+      <p>Errores: <span id="incorrect-count">0</span></p>
+    </div>
+    <button id="restart" class="mt-4 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600">Reiniciar</button>
+  </div>
+
+  <!-- Sonidos -->
+  <audio id="correct-sound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+  <audio id="incorrect-sound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
+
+  <script>
+    let correct = 0;
+    let incorrect = 0;
+    let level = 1;
+    let num1, num2;
+    let timer;
+    let timeLeft = 60;
+    let gameActive = false;
+
+    function generateQuestion() {
+      if (!gameActive) return;
+      const maxNumber = level * 5; // Aumenta la dificultad en cada nivel
+      num1 = Math.floor(Math.random() * maxNumber) + 1;
+      num2 = Math.floor(Math.random() * maxNumber) + 1;
+      document.getElementById('question').textContent = `¿Cuánto es ${num1} x ${num2}?`;
+      document.getElementById('answer').value = '';
+      document.getElementById('feedback').textContent = '';
+    }
+
+    function checkAnswer() {
+      if (!gameActive) return;
+      const userAnswer = parseInt(document.getElementById('answer').value);
+      const feedback = document.getElementById('feedback');
+      const correctSound = document.getElementById('correct-sound');
+      const incorrectSound = document.getElementById('incorrect-sound');
+      if (userAnswer === num1 * num2) {
+        correct++;
+        feedback.textContent = '¡Correcto! ¡Sigue así! 🎉';
+        feedback.className = 'correct p-2 rounded-lg';
+        correctSound.play();
+        if (correct % 5 === 0) {
+          levelUp();
+        }
+      } else {
+        incorrect++;
+        feedback.textContent = '¡Ups! Intenta de nuevo. ❌';
+        feedback.className = 'incorrect p-2 rounded-lg';
+        incorrectSound.play();
+      }
+      updateScore();
+      setTimeout(generateQuestion, 1000);
+    }
+
+    function updateScore() {
+      document.getElementById('correct-count').textContent = correct;
+      document.getElementById('incorrect-count').textContent = incorrect;
+      document.getElementById('level').textContent = `Nivel: ${level}`;
+    }
+
+    function levelUp() {
+      level++;
+      timeLeft = 60; // Reinicia el temporizador al subir de nivel
+      document.getElementById('timer').textContent = `Tiempo restante: ${timeLeft}s`;
+      clearInterval(timer);
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function restartGame() {
+      correct = 0;
+      incorrect = 0;
+      level = 1;
+      timeLeft = 60;
+      gameActive = true;
+      updateScore();
+      document.getElementById('timer').textContent = `Tiempo restante: ${timeLeft}s`;
+      generateQuestion();
+      clearInterval(timer);
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById('timer').textContent = `Tiempo restante: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        gameActive = false;
+        document.getElementById('feedback').textContent = '¡Tiempo agotado! 🎯';
+        document.getElementById('feedback').className = 'p-2 rounded-lg bg-yellow-300';
+      }
+    }
+
+    document.getElementById('submit').addEventListener('click', checkAnswer);
+    document.getElementById('restart').addEventListener('click', restartGame);
+    document.getElementById('answer').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        checkAnswer();
+      }
+    });
+
+    restartGame();
+  </script>
+</body>
+</html>
